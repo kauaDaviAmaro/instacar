@@ -120,7 +120,7 @@ class _ChatListPageState extends State<ChatListPage> {
       body: Column(
         children: [
           TopNavbar(
-            title: "Chats",
+            // title: "Chats",
             onSearchChanged: (value) {
               setState(() {
                 searchQuery = value;
