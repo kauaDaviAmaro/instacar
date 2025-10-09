@@ -173,7 +173,6 @@ class _CaronasPageState extends State<CaronasPage> {
       body: Column(
         children: [
           TopNavbar(
-            // title: "Histórico de Solicitações",
             onSearchChanged: (value) {
               setState(() {
                 searchQuery = value;
