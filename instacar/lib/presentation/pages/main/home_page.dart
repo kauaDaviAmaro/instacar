@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:instacar/presentation/widgets/BottomNavigationBar.dart';
 import 'package:instacar/presentation/widgets/RideListWidget.dart';
+import 'package:instacar/presentation/widgets/TopChatButton.dart';
 import 'package:instacar/presentation/widgets/navbar.dart';
 
 class HomePage extends StatefulWidget {
@@ -28,7 +29,7 @@ class _HomePageState extends State<HomePage> {
       body: Column(
         children: [
           TopNavbar(
-            title: "Página Principal",
+            // title: "texto",
             onSearchChanged: (value) {
               setState(() {
                 searchQuery = value;
@@ -59,6 +60,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       bottomNavigationBar: BottomNavBar(selectedIndex: currentIndex),
+      
     );
   }
 
@@ -72,10 +74,10 @@ class _HomePageState extends State<HomePage> {
     int? maxAge,
   }) {
     setState(() {
-      this.selectedVehicleType = vehicleType;
-      this.selectedGender = gender;
-      this.selectedSpots = spots;
-      this.selectedSortOrder = sortOrder;
+      selectedVehicleType = vehicleType;
+      selectedGender = gender;
+      selectedSpots = spots;
+      selectedSortOrder = sortOrder;
       this.minAge = minAge;
       this.maxAge = maxAge;
     });

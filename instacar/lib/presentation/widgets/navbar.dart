@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:instacar/presentation/widgets/topChatButton.dart';
 import 'package:instacar/presentation/widgets/home_modal_add.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class TopNavbar extends StatefulWidget {
   final Function(String) onSearchChanged;
-  final String title;
   final bool showFilter; // New parameter
   final Function(Map<String, dynamic>)? onFilterApplied; // New parameter for filter callback
 
   const TopNavbar({
     super.key,
     required this.onSearchChanged,
-    required this.title,
     this.showFilter = true, // Default is true
     this.onFilterApplied,
   });
@@ -55,13 +55,10 @@ class _TopNavbarState extends State<TopNavbar> {
                     width: 160,
                     height: 30,
                   ),
-                  Text(
-                    widget.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  TopChatButton(
+                    onTap: () {
+                      GoRouter.of(context).go('/chat');
+                    },
                   ),
                 ],
               ),

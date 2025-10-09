@@ -36,7 +36,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
       body: Column(
         children: [
           TopNavbar(
-            title: "Favoritos",
+            // title: "Favoritos",
             onSearchChanged: (value) {
               setState(() {
                 searchQuery = value;
