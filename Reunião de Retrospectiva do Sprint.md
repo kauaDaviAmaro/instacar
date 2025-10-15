@@ -4,7 +4,10 @@
 
 **Objetivo:** Inspecionar o trabalho e os processos do sprint que se encerra, buscando melhoria contínua na eficiência, colaboração e qualidade da equipe.
 
-### **1. Geração e Coleta de Dados**
+<br>
+
+
+## **1. Geração e Coleta de Dados**
 
  * **O que continuar?**
     
@@ -35,7 +38,10 @@
 
     - Criação dos markers ou veiculos para conseguir transmitir mais o menos a localização da carona em relação sua localização e o mapa;
 
-### **2. Priorização dos Temas**
+<br>
+
+
+## **2. Priorização dos Temas**
 
 - Criaçãos do Pop-up responsivo após a finalização da corrida para avaliação do usuário e o que mais quiser falar;
 
@@ -45,7 +51,9 @@
 
 **Justificativa:** O motivo dessas escolhas foi primeiramente facilidade de implementação do projeto perante atual estado. Necessidade de implementação para avanaço para todo fluxo de criação, uso e finalização de uma corrida. E por último a criação e adicionamento do mapa para que assimo possamos ir para a última parte do projeto que seria toda a disponibilização, uso e configuração do mapa por todos para uso no dia a dia do aplicativo.
 
-### **3. Elaboração do Plano de Ação**
+<br>
+
+## **3. Elaboração do Plano de Ação**
 
 - **Frontend:**
     

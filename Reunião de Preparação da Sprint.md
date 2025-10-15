@@ -4,8 +4,9 @@
 
 **Objetivo Principal:** Definir o Escopo de Trabalho, estabelecer a Meta do Sprint e garantir que os itens estejam prontos para o desenvolvimento.
 
-### 1. Revisão da Capacidade
-# 1. Revisão da Velocidade
+<br>
+
+## 1. Revisão da Capacidade
 
 **Velocidade Histórica: (pontos de 0 a 10)**
 
@@ -21,17 +22,40 @@
     
 **Inicio 12/10/2025 - Final 30/10/2025**
 
-# 2. Definição e Acordo da Meta
+<br>
+
+## 2. Definição e Acordo da Meta
 
 **Meta da Sprint:**
-- *Adicionar mapa na tela principal*
-- *Diferenciar perfil premium do perfil gratuito*
+- **Adicionar mapa na tela principal:** Adicionar na homepage o botão para transicionar do display de cards para mapa e vice-versa. Sendo algo responsivo e uma transição simples user friendly.;
+
+- **Diferenciar perfil premium do perfil gratuito:** Adicionar a coluna do plano premium no banco de dados, para fazermos a distinção de display do usuário simples e premium por meio de avatares diferentes, e por meio de benefícios diferentes.
+
+- **Criar Pop-up responsivo de avaliação:** Criação de um pop-up responsivo que aparece após a finalização de uma prestação de carona, sendo a avaliação obrigatória e caso não realizado não será possível fechar o pop-up.
+
+<br>
 
 
-### 2. Definição e Acordo da Meta
+## 3. Seleção e Estimativa do Escopo
 
 
-### 3. Seleção e Estimativa do Escopo
 
+<br>
 
-### 4. Decisões e Dependências
+## 4. Decisões e Dependências
+
+**a) Decisões Chave**
+
+- Uso de ferramentas visuais, icones ou logos para distinção de usuários básicos e premiuns;
+
+- Uso de ferramentas simples para criação do pop-up de avaliação de corrida, somente será requisitado a todos e sempre a obrigatoriedade de avaliação visto a necessidade de aumentar nosso banco de dados e informações sobre o perfis dos motoristas.
+
+- Uso da API do google ou do leaflet, tudo a depender da capacidade e da compatibilidade de nós desenvolvedores utilizarmos uma das APIs. Iremos utilizar e testar qual delas é melhor, e mais compatível com nosso aplicativo.
+
+**b) Dependências ou Riscos:**
+
+- **Biometria:** não será possível implementar no projeto atualmente e ainda foi retirado perante inutilidade no projeto visto que será mobile, mas irá rodar local. No entanto, caso haja tempo até dia 08/11/2025 será tentado implementar;
+
+- **Mapa com imagem ativa:** Algo um pouco mais complexo devido a necessidade de constante atulização e sincronização com os usuários, visto que somente desse modo podemos mover os markers. Mas, após debate verificou que implementação não seria primordial, visto que a os usuários irão compartilhar sua localização por meio de endereço. No entanto, caso haja tempo até dia 08/11/2025 será tentado implementar;
+
+- **Compartilhamento de localização atual:** Algo mais complexo pelo mesmos motivos do tema acima, visto a dificuldade de cosntante sincronização com os usuários. No entato, pertinente para o projeto para maior segurança de ambas as partes para cosntante notificação de movimentação, localização e status dos usuários no momento que desejarem compartilhar. No entanto, pela ausência de tempo para uma feature complexa nesse calibre, caso haja tempo até dia 08/11/2025 será tentado implementar;
