@@ -38,6 +38,33 @@
 
 ## 3. Seleção e Estimativa do Escopo
 
+- **Tipo:** Tarefa; **Título do Item:** Criação tipos de perfil e avatar por tipo de plano; **Estimativa:** 6 Pontos;
+
+- **Tipo:** Tarefa; **Título do Item:** Criação de pop-up responsivo seguido de finalização de corrida; **Estimativa:** 7 Pontos;
+
+- **Tipo:** Tarefa; **Título do Item:** Adicionar atualização para o plano premium; **Estimativa:**6 Pontos;
+
+- **Tipo:** Tarefa; **Título do Item:** Adicionar avaliação de caronas/usuários; **Estimativa:**7 Pontos;
+
+- **Tipo:** Tarefa; **Título do Item:** Criação de botão para display de mapa na landing page; **Estimativa:** 9 Pontos;
+
+- **Tipo:** Tarefa; **Título do Item:** Avaliação de caronas/usuários; **Estimativa:** 7 Pontos;
+
+- **Tipo:** Tarefa; **Título do Item:** Adicionar tabelas de avaliação de caronas/usuários; **Estimativa:** 7 Pontos;
+
+- **Tipo:** Tarefa; **Título do Item:** Atualização status em banco de dados para o plano premium; **Estimativa:** 8 Pontos;
+
+- **Tipo:** Tarefa; **Título do Item:** Endpoint de avaliação; **Estimativa:** 7 Pontos;
+
+- **Tipo:** Tarefa; **Título do Item:** Endpoint de inicio/finalizar corrida; **Estimativa:** 9 Pontos;
+
+- **Tipo:** Tarefa; **Título do Item:** Endpoint de plano premium; **Estimativa:** 7 Pontos;
+
+- **Tipo:** HU; **Título do Item:** Acesso por biometria; **Estimativa:** 7 Pontos;
+
+- **Tipo:** HU; **Título do Item:** Criação markers no mapa responsivos; **Estimativa:** 7 Pontos;
+
+- **Tipo:** HU; **Título do Item:** Criação de compartilhamento de localização em tempo real; **Estimativa:** 7 Pontos;
 
 
 <br>
