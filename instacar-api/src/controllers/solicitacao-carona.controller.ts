@@ -3,6 +3,7 @@ import SolicitacaoCarona from "../models/solicitacao-carona";
 import Carona from "../models/carona";
 import Usuario from "../models/User";
 import { IAuthRequest } from "../types";
+
 import { MESSAGES } from "../utils/messages";
 
 const solicitacaoCaronaController = {
