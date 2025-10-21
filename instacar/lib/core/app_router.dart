@@ -5,6 +5,7 @@ import 'package:instacar/presentation/pages/chat/chat_list_page.dart';
 import 'package:instacar/presentation/pages/main/caronas_page.dart';
 import 'package:instacar/presentation/pages/main/favorites_page.dart';
 import 'package:instacar/presentation/pages/auth/password_reset.dart';
+import 'package:instacar/presentation/pages/main/plans.dart';
 import '../presentation/pages/main/contact_page.dart';
 import '../presentation/pages/main/home_page.dart';
 import '../presentation/pages/auth/login_page.dart';
@@ -206,6 +207,21 @@ final GoRouter appRouter = GoRouter(
       path: '/terms',
       pageBuilder: (context, state) => CustomTransitionPage(
         child: TermosDeServicoPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: animation.drive(
+              Tween(begin: const Offset(1.0, 0.0), end: Offset.zero)
+                  .chain(CurveTween(curve: Curves.easeInOut)),
+            ),
+            child: child,
+          );
+        },
+      ),
+    ),
+    GoRoute(
+      path: '/plans',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        child: PlansPage(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SlideTransition(
             position: animation.drive(

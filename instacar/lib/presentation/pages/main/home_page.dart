@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:instacar/presentation/widgets/BottomNavigationBar.dart';
 import 'package:instacar/presentation/widgets/RideListWidget.dart';
-import 'package:instacar/presentation/widgets/TopChatButton.dart';
 import 'package:instacar/presentation/widgets/navbar.dart';
 
 class HomePage extends StatefulWidget {

@@ -12,7 +12,7 @@ class BottomNavBar extends StatelessWidget {
     TabItem(icon: Icons.favorite_border, title: 'Favoritos'),
     TabItem(icon: Icons.car_crash_outlined, title: 'Caronas'),
     TabItem(icon: Icons.notifications, title: 'Solicitações'),
-    TabItem(icon: Icons.chat, title: 'Chat'),
+    TabItem(icon: Icons.history, title: 'Histórico'),
     TabItem(icon: Icons.account_box, title: 'Perfil'),
   ];
 
@@ -31,7 +31,7 @@ class BottomNavBar extends StatelessWidget {
         GoRouter.of(context).go('/solicitacoes');
         break;
       case 4:
-        GoRouter.of(context).go('/chat');
+        GoRouter.of(context).go('/historico');
         break;
       case 5:
         GoRouter.of(context).go('/profile');
