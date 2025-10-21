@@ -52,6 +52,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     GoRouter.of(context).go('/edit-profile');
   }
 
+   void availablePlans(BuildContext context) {
+    GoRouter.of(context).go('/plans');
+  }
+
   void navigateToTerms(BuildContext context) {
     GoRouter.of(context).push('/terms');
   }
@@ -225,6 +229,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           text: "Editar Perfil",
                           subtitle: "Atualize suas informações",
                           onTap: () => navigateToEditProfile(context),
+                        ),
+                        const SizedBox(height: 20),
+                        _buildMenuItem(
+                          icon: Icons.person,
+                          text: "Planos",
+                          subtitle: "Veja nossos planos disponíveis",
+                          onTap: () => availablePlans(context),
                         ),
                         const SizedBox(height: 16),
                         _buildMenuItem(
