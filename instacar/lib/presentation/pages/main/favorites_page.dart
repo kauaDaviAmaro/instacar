@@ -3,6 +3,7 @@ import 'package:instacar/core/services/FavoritesService.dart';
 import 'package:instacar/presentation/widgets/RideListWidget.dart';
 import 'package:instacar/presentation/widgets/navbar.dart';
 import 'package:instacar/presentation/widgets/BottomNavigationBar.dart';
+import 'package:instacar/presentation/widgets/floating_map_button.dart';
 
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({
@@ -33,22 +34,28 @@ class _FavoritesPageState extends State<FavoritesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
+      body: Stack(
         children: [
-          TopNavbar(
-            // title: "Favoritos",
-            onSearchChanged: (value) {
-              setState(() {
-                searchQuery = value;
-              });
-            },
+          Column(
+            children: [
+              TopNavbar(
+                // title: "Favoritos",
+                onSearchChanged: (value) {
+                  setState(() {
+                    searchQuery = value;
+                  });
+                },
+                showRequestsButton: true, // Adicionar botão na página Favoritos também
+              ),
+              Expanded(
+                child: RideListWidget(
+                  searchQuery: searchQuery,
+                  favoriteRideIds: favoriteRideIds,
+                ),
+              ),
+            ],
           ),
-          Expanded(
-            child: RideListWidget(
-              searchQuery: searchQuery,
-              favoriteRideIds: favoriteRideIds,
-            ),
-          ),
+          const FloatingMapButton(),
         ],
       ),
       bottomNavigationBar: BottomNavBar(selectedIndex: 1),

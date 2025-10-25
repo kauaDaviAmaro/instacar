@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:instacar/presentation/pages/main/edit_ride_page.dart';
 
 import 'package:instacar/presentation/widgets/BottomNavigationBar.dart';
-import 'package:instacar/presentation/widgets/create_ride_page.dart';
 import 'package:instacar/presentation/widgets/navbar.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:instacar/presentation/widgets/ride_feedback_dialog.dart';
+import 'package:instacar/presentation/widgets/floating_map_button.dart';
 import 'package:instacar/presentation/pages/chat/chat_page.dart';
 import 'package:instacar/core/services/user_service.dart';
 import 'package:instacar/core/services/solicitacao_service.dart';
@@ -159,6 +159,29 @@ class _CaronasPageState extends State<CaronasPage> {
     }
   }
 
+  void _showFeedbackDialog(Map<String, dynamic> carona) {
+    showDialog(
+      context: context,
+      builder: (context) => RideFeedbackDialog(
+        rideId: carona['solicitacaoId'] ?? '',
+        counterpartyName: carona['counterpartyName'] ?? '',
+        counterpartyId: carona['counterpartyId'] ?? '',
+        from: carona['from'] ?? '',
+        to: carona['to'] ?? '',
+      ),
+    ).then((result) {
+      if (result == true) {
+        // Feedback enviado com sucesso
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Avaliação enviada com sucesso!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final filteredCaronas =
@@ -170,15 +193,18 @@ class _CaronasPageState extends State<CaronasPage> {
         }).toList();
 
     return Scaffold(
-      body: Column(
+      body: Stack(
         children: [
-          TopNavbar(
-            onSearchChanged: (value) {
-              setState(() {
-                searchQuery = value;
-              });
-            },
-          ),
+          Column(
+            children: [
+              TopNavbar(
+                onSearchChanged: (value) {
+                  setState(() {
+                    searchQuery = value;
+                  });
+                },
+                showRequestsButton: true,
+              ),
           Expanded(
             child:
                 isLoading
@@ -414,6 +440,14 @@ class _CaronasPageState extends State<CaronasPage> {
                                               );
                                             } : null,
                                           ),
+                                          // Botão de avaliação para caronas aceitas
+                                          if (carona['statusSolicitacao']?.toString().toLowerCase() == 'aceita') ...[
+                                            IconButton(
+                                              tooltip: 'Avaliar carona',
+                                              icon: const Icon(Icons.star_outline),
+                                              onPressed: () => _showFeedbackDialog(carona),
+                                            ),
+                                          ],
                                           if ((carona['papel']?.toString().toLowerCase() ?? '') == 'motorista')
                                             IconButton(
                                               tooltip: 'Editar carona',
@@ -440,25 +474,12 @@ class _CaronasPageState extends State<CaronasPage> {
                             },
                           )),
           ),
+            ],
+          ),
+          const FloatingMapButton(),
         ],
       ),
       bottomNavigationBar: BottomNavBar(selectedIndex: currentIndex),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await showBarModalBottomSheet(
-            context: context,
-            builder: (context) => CreateRidePage(),
-          );
-          // Se a carona foi criada com sucesso, recarrega a lista
-          if (result == true) {
-            fetchCaronas();
-          }
-        },
-        backgroundColor: Colors.blue, // Blue background
-        foregroundColor: Colors.white,
-        splashColor: Colors.blue, // White icon color
-        child: Icon(Icons.add),
-      ),
     );
   }
 }

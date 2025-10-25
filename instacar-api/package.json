@@ -10,6 +10,7 @@
     "format:check": "prettier --check .",
     "db:create": "sequelize db:create",
     "db:migrate": "sequelize db:migrate",
+    "db:migrate:custom": "ts-node src/scripts/run-migrations.ts",
     "db:seed": "ts-node src/seeders/seed.ts",
     "db:seed:all": "ts-node -e \"require('./src/seeders/index').runAllSeeders()\"",
     "db:seed:users": "ts-node -e \"require('./src/seeders/index').seedUsers()\"",
@@ -40,6 +41,7 @@
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.6",
     "socket.io": "^4.8.1",
+    "sqlite3": "^5.1.6",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },
@@ -52,6 +54,7 @@
     "@types/node": "^22.13.10",
     "@types/nodemailer": "^6.4.17",
     "@types/sequelize": "^4.28.20",
+    "@types/sqlite3": "^3.1.11",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "nodemon": "^3.1.9",

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InstaCar Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+        .ride-marker {
+            background-color: #3182CE;
+            border: 2px solid white;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            text-align: center;
+            line-height: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .ride-popup {
+            font-family: Arial, sans-serif;
+        }
+        .ride-popup h3 {
+            margin: 0 0 8px 0;
+            color: #3182CE;
+            font-size: 16px;
+        }
+        .ride-popup p {
+            margin: 4px 0;
+            font-size: 14px;
+        }
+        .ride-popup .price {
+            font-weight: bold;
+            color: #38A169;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Inicializar o mapa
+        const map = L.map('map').setView([-23.5505, -46.6333], 12);
+        
+        // Adicionar tiles do OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Dados de exemplo das caronas
+        const rides = [
+            {
+                id: 1,
+                from: 'Centro, São Paulo',
+                to: 'Aeroporto de Guarulhos',
+                price: 'R$ 25,00',
+                time: '14:30',
+                seats: 2,
+                lat: -23.5505,
+                lng: -46.6333,
+                driver: 'João Silva',
+                driverId: 'driver1'
+            },
+            {
+                id: 2,
+                from: 'Vila Madalena, São Paulo',
+                to: 'Shopping Iguatemi',
+                price: 'R$ 18,00',
+                time: '16:45',
+                seats: 1,
+                lat: -23.5489,
+                lng: -46.6938,
+                driver: 'Maria Santos',
+                driverId: 'driver2'
+            },
+            {
+                id: 3,
+                from: 'Pinheiros, São Paulo',
+                to: 'Terminal Tietê',
+                price: 'R$ 22,00',
+                time: '18:20',
+                seats: 3,
+                lat: -23.5679,
+                lng: -46.6882,
+                driver: 'Pedro Costa',
+                driverId: 'driver3'
+            },
+            {
+                id: 4,
+                from: 'Moema, São Paulo',
+                to: 'Aeroporto de Congonhas',
+                price: 'R$ 15,00',
+                time: '19:10',
+                seats: 1,
+                lat: -23.6045,
+                lng: -46.6568,
+                driver: 'Ana Lima',
+                driverId: 'driver4'
+            },
+            {
+                id: 5,
+                from: 'Itaim Bibi, São Paulo',
+                to: 'Estação da Luz',
+                price: 'R$ 20,00',
+                time: '20:15',
+                seats: 2,
+                lat: -23.5845,
+                lng: -46.6748,
+                driver: 'Carlos Oliveira',
+                driverId: 'driver5'
+            }
+        ];
+        
+        // Armazenar referências dos marcadores para controle
+        const rideMarkers = new Map();
+        let userMarker = null;
+        
+        // Função para atualizar todas as caronas
+        function updateRides(newRides) {
+            // Remover marcadores existentes
+            rideMarkers.forEach((marker) => {
+                map.removeLayer(marker);
+            });
+            rideMarkers.clear();
+            
+            // Adicionar novos marcadores
+            newRides.forEach(ride => {
+                addRideMarker(ride);
+            });
+        }
+        
+        // Função para adicionar um marcador de carona
+        function addRideMarker(ride) {
+            const marker = L.marker([ride.lat, ride.lng], {
+                icon: L.divIcon({
+                    className: 'ride-marker',
+                    html: ride.seats,
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                })
+            });
+            
+            const popupContent = `
+                <div class="ride-popup">
+                    <h3>${ride.from} → ${ride.to}</h3>
+                    <p><strong>Motorista:</strong> ${ride.driver}</p>
+                    <p><strong>Horário:</strong> ${ride.time}</p>
+                    <p><strong>Vagas:</strong> ${ride.seats}</p>
+                    <p class="price">${ride.price}</p>
+                </div>
+            `;
+            
+            marker.bindPopup(popupContent);
+            marker.addTo(map);
+            rideMarkers.set(ride.id, marker);
+        }
+        
+        // Função para remover um marcador de carona
+        function removeRideMarker(rideId) {
+            const marker = rideMarkers.get(rideId);
+            if (marker) {
+                map.removeLayer(marker);
+                rideMarkers.delete(rideId);
+            }
+        }
+        
+        // Função para centralizar o mapa em uma localização
+        function centerMapOnLocation(lat, lng) {
+            map.setView([lat, lng], 15);
+        }
+        
+        // Função para centralizar no usuário
+        function centerOnUser() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    // Remover marcador anterior do usuário
+                    if (userMarker) {
+                        map.removeLayer(userMarker);
+                    }
+                    
+                    // Adicionar marcador do usuário
+                    userMarker = L.marker([lat, lng], {
+                        icon: L.divIcon({
+                            className: 'user-marker',
+                            html: '📍',
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 15]
+                        })
+                    }).addTo(map);
+                    
+                    // Centralizar no usuário
+                    map.setView([lat, lng], 15);
+                }, function(error) {
+                    console.log('Erro ao obter localização:', error);
+                    // Centralizar em São Paulo como fallback
+                    map.setView([-23.5505, -46.6333], 12);
+                });
+            } else {
+                console.log('Geolocalização não suportada');
+                map.setView([-23.5505, -46.6333], 12);
+            }
+        }
+        
+        // Adicionar marcadores iniciais
+        rides.forEach(ride => {
+            addRideMarker(ride);
+        });
+        
+        // Escutar mensagens do Flutter
+        window.addEventListener('message', function(event) {
+            const data = event.data;
+            
+            if (typeof data === 'string') {
+                // Mensagens simples
+                switch(data) {
+                    case 'centerOnUser':
+                        centerOnUser();
+                        break;
+                    case 'refreshRides':
+                        // Recarregar caronas (você pode implementar uma chamada para API aqui)
+                        updateRides(rides);
+                        break;
+                }
+            } else if (typeof data === 'object' && data.type) {
+                // Mensagens estruturadas
+                switch(data.type) {
+                    case 'updateRides':
+                        updateRides(data.rides);
+                        break;
+                    case 'addRide':
+                        addRideMarker(data.ride);
+                        break;
+                    case 'removeRide':
+                        removeRideMarker(data.rideId);
+                        break;
+                    case 'centerMap':
+                        centerMapOnLocation(data.lat, data.lng);
+                        break;
+                }
+            }
+        });
+        
+        // Centralizar automaticamente no usuário ao carregar
+        setTimeout(() => {
+            centerOnUser();
+        }, 1000);
+    </script>
+</body>
+</html>

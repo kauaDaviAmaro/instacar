@@ -8,12 +8,14 @@ class TopNavbar extends StatefulWidget {
   final Function(String) onSearchChanged;
   final bool showFilter; // New parameter
   final Function(Map<String, dynamic>)? onFilterApplied; // New parameter for filter callback
+  final bool showRequestsButton; // New parameter for requests button
 
   const TopNavbar({
     super.key,
     required this.onSearchChanged,
     this.showFilter = true, // Default is true
     this.onFilterApplied,
+    this.showRequestsButton = false, // Default is false
   });
 
   @override
@@ -55,10 +57,43 @@ class _TopNavbarState extends State<TopNavbar> {
                     width: 160,
                     height: 30,
                   ),
-                  TopChatButton(
-                    onTap: () {
-                      GoRouter.of(context).go('/chat');
-                    },
+                  Row(
+                    children: [
+                      if (widget.showRequestsButton) ...[
+                        GestureDetector(
+                          onTap: () {
+                            GoRouter.of(context).go('/solicitacoes');
+                          },
+                          child: Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(color: Colors.blue, width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.notifications_active,
+                              color: Colors.blue,
+                              size: 28,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                      ],
+                      TopChatButton(
+                        onTap: () {
+                          GoRouter.of(context).go('/chat');
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),

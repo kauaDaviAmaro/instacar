@@ -21,6 +21,7 @@ import '../presentation/pages/main/pricing_page.dart';
 import '../presentation/pages/main/ride_details_page.dart';
 import '../presentation/pages/motorista/solicitacoes_page.dart';
 import '../presentation/pages/usuario/minhas_solicitacoes_page.dart';
+import '../presentation/pages/main/map_page.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/login',
@@ -315,6 +316,21 @@ final GoRouter appRouter = GoRouter(
       path: '/minhas-solicitacoes',
       pageBuilder: (context, state) => CustomTransitionPage(
         child: MinhasSolicitacoesPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: animation.drive(
+              Tween(begin: const Offset(1.0, 0.0), end: Offset.zero)
+                  .chain(CurveTween(curve: Curves.easeInOut)),
+            ),
+            child: child,
+          );
+        },
+      ),
+    ),
+    GoRoute(
+      path: '/map',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        child: const MapPage(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SlideTransition(
             position: animation.drive(

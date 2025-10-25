@@ -3,6 +3,7 @@ import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:instacar/core/services/solicitacao_service.dart';
 import 'package:instacar/core/services/user_service.dart';
 import 'package:instacar/presentation/widgets/BottomNavigationBar.dart';
+import 'package:instacar/presentation/widgets/navbar.dart';
 
 class SolicitacoesPage extends StatefulWidget {
   const SolicitacoesPage({super.key});
@@ -15,6 +16,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
   List<Map<String, dynamic>> solicitacoes = [];
   bool isLoading = true;
   String? currentUserId;
+  String searchQuery = '';
 
   @override
   void initState() {
@@ -113,7 +115,6 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
   Widget _buildSolicitacaoCard(Map<String, dynamic> solicitacao) {
     final passageiro = solicitacao['passageiro'] as Map<String, dynamic>;
     final carona = solicitacao['carona'] as Map<String, dynamic>;
-    final motorista = carona['motorista'] as Map<String, dynamic>;
     
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -325,33 +326,44 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Filtrar solicitações baseado na busca
+    final filteredSolicitacoes = solicitacoes.where((solicitacao) {
+      if (searchQuery.isEmpty) return true;
+      
+      final carona = solicitacao['carona'] as Map<String, dynamic>?;
+      if (carona == null) return false;
+      
+      final origem = (carona['origem'] ?? '').toLowerCase();
+      final destino = (carona['destino'] ?? '').toLowerCase();
+      final passageiro = solicitacao['passageiro'] as Map<String, dynamic>?;
+      final nomePassageiro = (passageiro?['name'] ?? passageiro?['nome'] ?? '').toLowerCase();
+      
+      final query = searchQuery.toLowerCase();
+      return origem.contains(query) || 
+             destino.contains(query) || 
+             nomePassageiro.contains(query);
+    }).toList();
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Solicitações de Carona',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
+      body: Column(
+        children: [
+          TopNavbar(
+            onSearchChanged: (value) {
+              setState(() {
+                searchQuery = value;
+              });
+            },
+            showRequestsButton: false, // Não mostrar botão de solicitações na própria página de solicitações
+            showFilter: false, // Não mostrar filtro nesta página
           ),
-        ),
-        backgroundColor: const Color(0xFF3182CE),
-        elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: _loadSolicitacoes,
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            tooltip: 'Atualizar',
-          ),
-        ],
-      ),
-      bottomNavigationBar: const BottomNavBar(selectedIndex: 3),
-      body: isLoading
+          Expanded(
+            child: isLoading
           ? const Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF3182CE)),
               ),
             )
-          : solicitacoes.isEmpty
+          : filteredSolicitacoes.isEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -395,12 +407,16 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                   onRefresh: _loadSolicitacoes,
                   color: const Color(0xFF3182CE),
                   child: ListView.builder(
-                    itemCount: solicitacoes.length,
+                    itemCount: filteredSolicitacoes.length,
                     itemBuilder: (context, index) {
-                      return _buildSolicitacaoCard(solicitacoes[index]);
+                      return _buildSolicitacaoCard(filteredSolicitacoes[index]);
                     },
                   ),
                 ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: const BottomNavBar(selectedIndex: 3),
     );
   }
 }

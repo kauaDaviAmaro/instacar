@@ -424,7 +424,7 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
           ),
         ],
       ),
-      bottomNavigationBar: const BottomNavBar(selectedIndex: 5),
+      bottomNavigationBar: const BottomNavBar(selectedIndex: 3),
       body: isLoading
           ? const Center(
               child: CircularProgressIndicator(
