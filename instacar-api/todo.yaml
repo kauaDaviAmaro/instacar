@@ -1,0 +1,60 @@
+API aplicativo de carona:
+
+- Cadastro
+  - validação de Dados
+  - criar usuario
+  - Possibilidade de login via Google, Facebook ou Apple (OAuth)?
+
+- Login
+  - autorização
+  - autenticação (jwt)
+    - email
+    - senha
+  - limite de tentativa de login?
+
+- Esqueci a senha
+  - codigo de recuperação por email
+    - periodo para espirar
+    - confirmar codigo recebido
+    - mudar senha
+    - Notificação de mudança de senha
+
+- Perfil do usuário
+  - visualizar e editar informações
+  - configurações de privacidade?
+
+- Carona
+  - historico
+  - permitir caronas recorrentes (ex “toda segunda-feira”)?
+  - criar nova carona
+    - verificar se ha informacoes de carona
+    - ponto de inicio
+    - ponto final
+    - observação
+
+  - status
+
+- Usuario
+  - nome
+  - email
+  - data de nascimento
+  - senha
+  - confirmar senha
+  - foto de perfil?
+
+  - somente se carona (opcional)
+    - cnh
+    - tipo veiculo
+    - cor veiculo
+    - placa
+    - quando adicionar
+      - Verificação de Identidade
+
+- Usuairos favoritos
+
+- chat por carona
+  - Mensagens automáticas?
+
+- relatório de usuários suspeitos?
+
+- Compartilhamento de rota?

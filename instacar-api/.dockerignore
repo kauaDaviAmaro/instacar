@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log*
+Dockerfile
+dist
+.tmp
+.git
+.env
+**/.DS_Store
+
+
