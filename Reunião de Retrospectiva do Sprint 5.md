@@ -1,6 +1,6 @@
 # Reunião de Retrospectiva do Sprint
 
-**Tema:** Retrospectiva do Sprint 5 - Frontend e Backend
+**Tema:** Retrospectiva do Sprint 5
 
 **Objetivo:** Inspecionar o trabalho e os processos do sprint que se encerra, buscando melhoria contínua na eficiência, colaboração e qualidade da equipe.
 
@@ -71,6 +71,3 @@
     - **Ação:** Criação de endpoins de avaliação, inicia e final de corrida e plano premium; **Responsável:** Kauã Davi; **Data:** 30/10/2025;
 
     - **Ação:** Adicionar tabelas de avaliações de caronas; **Responsável:** Lucas Costa; **Data:** 30/10/2025;
-
-
-

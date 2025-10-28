@@ -1,6 +1,6 @@
 # Reunião de Preparação (Planning) do Sprint
 
-**Tema**: Planejamento do Sprint 5 - Frontend e Backend
+**Tema**: Planejamento do Sprint 6
 
 **Objetivo Principal:** Definir o Escopo de Trabalho, estabelecer a Meta do Sprint e garantir que os itens estejam prontos para o desenvolvimento.
 
@@ -20,7 +20,7 @@
 - **9 pontos:** Entregaremos todas as tasks propostas pelo scrum dentro do prazo estimado.
 
     
-**Inicio 12/10/2025 - Final 30/10/2025**
+**Inicio 15/10/2025 - Final 21/10/2025**
 
 <br>
 
