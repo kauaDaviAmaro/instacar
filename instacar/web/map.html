@@ -16,15 +16,37 @@
             width: 100%;
         }
         .ride-marker {
-            background-color: #3182CE;
-            border: 2px solid white;
-            border-radius: 50%;
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
-            text-align: center;
-            line-height: 16px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 0 2px rgba(0,0,0,0.3);
+        }
+        .ride-marker img.car-icon {
+            width: 28px;
+            height: 28px;
+            display: block;
+            filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25));
+        }
+        .ride-badge {
+            position: absolute;
+            right: -2px;
+            bottom: -2px;
+            background: #3182CE;
+            color: #fff;
+            border: 2px solid #fff;
+            min-width: 22px;
+            height: 18px;
+            padding: 0 4px;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.25);
         }
         .ride-popup {
             font-family: Arial, sans-serif;
@@ -51,127 +73,141 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // Inicializar o mapa
-        const map = L.map('map').setView([-23.5505, -46.6333], 12);
+        // Marília - SP
+        const map = L.map('map').setView([-22.2171, -49.9501], 13);
+
+        // Panes para controlar ordem de sobreposição
+        map.createPane('rideCirclesPane');
+        map.getPane('rideCirclesPane').style.zIndex = 350;
+        map.createPane('rideMarkersPane');
+        map.getPane('rideMarkersPane').style.zIndex = 650;
+        map.createPane('userMarkerPane');
+        map.getPane('userMarkerPane').style.zIndex = 700;
+        map.createPane('userCirclePane');
+        map.getPane('userCirclePane').style.zIndex = 340;
         
         // Adicionar tiles do OpenStreetMap
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
         
-        // Dados de exemplo das caronas
-        const rides = [
-            {
-                id: 1,
-                from: 'Centro, São Paulo',
-                to: 'Aeroporto de Guarulhos',
-                price: 'R$ 25,00',
-                time: '14:30',
-                seats: 2,
-                lat: -23.5505,
-                lng: -46.6333,
-                driver: 'João Silva',
-                driverId: 'driver1'
-            },
-            {
-                id: 2,
-                from: 'Vila Madalena, São Paulo',
-                to: 'Shopping Iguatemi',
-                price: 'R$ 18,00',
-                time: '16:45',
-                seats: 1,
-                lat: -23.5489,
-                lng: -46.6938,
-                driver: 'Maria Santos',
-                driverId: 'driver2'
-            },
-            {
-                id: 3,
-                from: 'Pinheiros, São Paulo',
-                to: 'Terminal Tietê',
-                price: 'R$ 22,00',
-                time: '18:20',
-                seats: 3,
-                lat: -23.5679,
-                lng: -46.6882,
-                driver: 'Pedro Costa',
-                driverId: 'driver3'
-            },
-            {
-                id: 4,
-                from: 'Moema, São Paulo',
-                to: 'Aeroporto de Congonhas',
-                price: 'R$ 15,00',
-                time: '19:10',
-                seats: 1,
-                lat: -23.6045,
-                lng: -46.6568,
-                driver: 'Ana Lima',
-                driverId: 'driver4'
-            },
-            {
-                id: 5,
-                from: 'Itaim Bibi, São Paulo',
-                to: 'Estação da Luz',
-                price: 'R$ 20,00',
-                time: '20:15',
-                seats: 2,
-                lat: -23.5845,
-                lng: -46.6748,
-                driver: 'Carlos Oliveira',
-                driverId: 'driver5'
-            }
-        ];
+        // Lista inicial vazia; o Flutter enviará as caronas reais via postMessage
+        const rides = [];
         
         // Armazenar referências dos marcadores para controle
         const rideMarkers = new Map();
+        const rideCircles = new Map();
         let userMarker = null;
+        let userAreaCircle = null;
+        // Store rides by id for stable reconciliation
+        const currentRides = new Map();
+        // Track visibility state without destroying markers
+        let ridesVisible = true;
         
-        // Função para atualizar todas as caronas
+        // Non-destructive merge update of rides
         function updateRides(newRides) {
-            // Remover marcadores existentes
-            rideMarkers.forEach((marker) => {
-                map.removeLayer(marker);
-            });
-            rideMarkers.clear();
-            
-            // Adicionar novos marcadores
+            if (!Array.isArray(newRides)) {
+                console.warn('updateRides recebeu dados inválidos');
+                return;
+            }
             newRides.forEach(ride => {
-                addRideMarker(ride);
+                const id = String(ride.id);
+                const prev = currentRides.get(id);
+                currentRides.set(id, { ...(prev || {}), ...ride });
+                if (!rideMarkers.has(id)) {
+                    addRideMarker(currentRides.get(id));
+                } else {
+                    // If coordinates changed, re-add to reposition
+                    const marker = rideMarkers.get(id);
+                    const circle = rideCircles.get(id);
+                    if (marker) { map.removeLayer(marker); rideMarkers.delete(id); }
+                    if (circle) { map.removeLayer(circle); rideCircles.delete(id); }
+                    addRideMarker(currentRides.get(id));
+                }
             });
+        }
+
+        // Replace all rides (explicit destructive update)
+        function replaceRides(newRides) {
+            rideMarkers.forEach((m) => map.removeLayer(m));
+            rideMarkers.clear();
+            rideCircles.forEach((c) => map.removeLayer(c));
+            rideCircles.clear();
+            currentRides.clear();
+            if (Array.isArray(newRides)) {
+                newRides.forEach(ride => {
+                    const id = String(ride.id);
+                    currentRides.set(id, ride);
+                    addRideMarker(ride);
+                });
+            }
         }
         
         // Função para adicionar um marcador de carona
         function addRideMarker(ride) {
-            const marker = L.marker([ride.lat, ride.lng], {
+            const id = String(ride.id);
+            const lat = ride.lat ?? -22.2171;
+            const lng = ride.lng ?? -49.9501;
+            const marker = L.marker([lat, lng], {
                 icon: L.divIcon({
-                    className: 'ride-marker',
-                    html: ride.seats,
-                    iconSize: [20, 20],
-                    iconAnchor: [10, 10]
-                })
+                    className: '',
+                    html: `<div class="ride-marker"><img class="car-icon" src="assets/car.png" alt="car" /></div>`,
+                    iconSize: [34, 34],
+                    iconAnchor: [17, 17]
+                }),
+                pane: 'rideMarkersPane'
             });
             
+            const isMock = ride.isMock === true;
             const popupContent = `
                 <div class="ride-popup">
                     <h3>${ride.from} → ${ride.to}</h3>
                     <p><strong>Motorista:</strong> ${ride.driver}</p>
                     <p><strong>Horário:</strong> ${ride.time}</p>
                     <p><strong>Vagas:</strong> ${ride.seats}</p>
-                    <p class="price">${ride.price}</p>
+                    ${isMock ? '<p style="color:#F6AD55;font-size:12px;margin-top:4px;"><em>Carona de exemplo</em></p>' : ''}
+                    <div style="margin-top:8px;text-align:right;">
+                      ${isMock 
+                        ? '<button style="background:#718096;color:#fff;border:none;border-radius:6px;padding:6px 10px;cursor:not-allowed;" disabled title="Esta é uma carona de exemplo. Use caronas reais para ver detalhes.">Carona de exemplo</button>'
+                        : `<button style="background:#3182CE;color:#fff;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;"
+                            onclick="if(window.parent){window.parent.postMessage({ type: 'openRide', rideId: '${id}' }, '*');}">
+                            Ver detalhes
+                          </button>`
+                      }
+                    </div>
                 </div>
             `;
             
+            // Apenas abre o popup; navegação via botão dentro do popup
             marker.bindPopup(popupContent);
             marker.addTo(map);
-            rideMarkers.set(ride.id, marker);
+            rideMarkers.set(id, marker);
+
+            // Desenhar área aproximada para a carona
+            const circle = L.circle([lat, lng], {
+                radius: 600, // metros
+                color: '#805AD5',
+                weight: 1,
+                opacity: 0.6,
+                fillColor: '#805AD5',
+                fillOpacity: 0.12,
+                pane: 'rideCirclesPane'
+            }).addTo(map);
+            rideCircles.set(id, circle);
         }
         
         // Função para remover um marcador de carona
         function removeRideMarker(rideId) {
-            const marker = rideMarkers.get(rideId);
+            const id = String(rideId);
+            const marker = rideMarkers.get(id);
             if (marker) {
                 map.removeLayer(marker);
-                rideMarkers.delete(rideId);
+                rideMarkers.delete(id);
+            }
+            const circle = rideCircles.get(id);
+            if (circle) {
+                map.removeLayer(circle);
+                rideCircles.delete(id);
             }
         }
         
@@ -190,35 +226,122 @@
                     // Remover marcador anterior do usuário
                     if (userMarker) {
                         map.removeLayer(userMarker);
+                        userMarker = null;
                     }
                     
-                    // Adicionar marcador do usuário
-                    userMarker = L.marker([lat, lng], {
-                        icon: L.divIcon({
-                            className: 'user-marker',
-                            html: '📍',
-                            iconSize: [30, 30],
-                            iconAnchor: [15, 15]
-                        })
+                    // Desenhar/atualizar área aproximada ao redor do usuário (fazer primeiro)
+                    if (userAreaCircle) {
+                        map.removeLayer(userAreaCircle);
+                        userAreaCircle = null;
+                    }
+                    userAreaCircle = L.circle([lat, lng], {
+                        radius: 800, // metros
+                        color: '#3182CE',
+                        weight: 1,
+                        opacity: 0.8,
+                        fillColor: '#3182CE',
+                        fillOpacity: 0.15,
+                        pane: 'userCirclePane'
                     }).addTo(map);
                     
-                    // Centralizar no usuário
-                    map.setView([lat, lng], 15);
+                    // Adicionar marcador do usuário como ponto discreto (depois do círculo)
+                    userMarker = L.circleMarker([lat, lng], {
+                        radius: 6,
+                        color: '#3182CE',
+                        weight: 2,
+                        fillColor: '#3182CE',
+                        fillOpacity: 0.9,
+                        pane: 'userMarkerPane'
+                    }).addTo(map);
+
+                    // Garantir que as caronas existentes permaneçam visíveis
+                    // Verificar e re-adicionar se necessário
+                    const existingRidesCount = rideMarkers.size;
+                    if (existingRidesCount > 0) {
+                        // As caronas já estão no mapa, apenas garantir que estejam visíveis
+                        console.log(`Mantendo ${existingRidesCount} caronas visíveis após adicionar localização do usuário`);
+                        // Forçar re-renderização dos marcadores para garantir visibilidade
+                        rideMarkers.forEach((marker) => {
+                            if (!map.hasLayer(marker)) {
+                                marker.addTo(map);
+                            }
+                        });
+                    } else if (currentRides.size > 0) {
+                        // Se há caronas na lista mas não há marcadores, re-adicionar
+                        console.log('Re-adicionando caronas após localização do usuário');
+                        currentRides.forEach((ride) => {
+                            addRideMarker(ride);
+                        });
+                    }
+
+                    // Centralizar no usuário usando flyTo para transição suave
+                    // Mas manter um zoom que permita ver as caronas próximas
+                    const currentZoom = map.getZoom();
+                    const targetZoom = currentZoom < 12 ? 13 : Math.min(currentZoom, 15);
+                    map.flyTo([lat, lng], targetZoom, {
+                        duration: 0.5
+                    });
+
+                    // Se não houver caronas, solicitar ao Flutter
+                    // Mas só fazer isso se realmente não houver caronas no mapa
+                    if (currentRides.length === 0 && rideMarkers.size === 0) {
+                        if (window.parent) {
+                            window.parent.postMessage({ type: 'requestRides' }, '*');
+                        }
+                    }
                 }, function(error) {
-                    console.log('Erro ao obter localização:', error);
-                    // Centralizar em São Paulo como fallback
-                    map.setView([-23.5505, -46.6333], 12);
+                    // Melhor tratamento de erro de geolocalização
+                    let errorMsg = 'Erro desconhecido';
+                    if (error) {
+                        // Usar constantes numéricas para comparação mais segura
+                        const PERMISSION_DENIED = 1;
+                        const POSITION_UNAVAILABLE = 2;
+                        const TIMEOUT = 3;
+                        
+                        switch(error.code) {
+                            case PERMISSION_DENIED:
+                            case error.PERMISSION_DENIED:
+                                errorMsg = 'Permissão de localização negada pelo usuário';
+                                break;
+                            case POSITION_UNAVAILABLE:
+                            case error.POSITION_UNAVAILABLE:
+                                errorMsg = 'Localização indisponível';
+                                break;
+                            case TIMEOUT:
+                            case error.TIMEOUT:
+                                errorMsg = 'Tempo limite excedido ao obter localização';
+                                break;
+                            default:
+                                errorMsg = `Erro ${error.code || 'desconhecido'}: ${error.message || 'Erro desconhecido'}`;
+                                break;
+                        }
+                    }
+                    console.log('Erro ao obter localização:', errorMsg);
+                    
+                    // NÃO remover caronas em caso de erro
+                    // Apenas centralizar em Marília como fallback, mantendo tudo como está
+                    // Não fazer nenhuma atualização que possa remover marcadores existentes
+                    if (rideMarkers.size === 0 && currentRides.length === 0) {
+                        // Só solicitar caronas se não houver nenhuma no mapa
+                        if (window.parent) {
+                            window.parent.postMessage({ type: 'requestRides' }, '*');
+                        }
+                    }
+                    
+                    // Centralizar em Marília como fallback apenas se não houver zoom/visualização definida
+                    // Não forçar mudança de visualização se já houver conteúdo no mapa
+                    if (map.getZoom() === 13 && map.getCenter().lat === -22.2171 && map.getCenter().lng === -49.9501) {
+                        // Apenas centralizar se ainda estiver na posição padrão
+                        map.setView([-22.2171, -49.9501], 13);
+                    }
                 });
             } else {
                 console.log('Geolocalização não suportada');
-                map.setView([-23.5505, -46.6333], 12);
+                map.setView([-22.2171, -49.9501], 13);
             }
         }
         
-        // Adicionar marcadores iniciais
-        rides.forEach(ride => {
-            addRideMarker(ride);
-        });
+        // Não adicionar marcadores iniciais; aguardar atualização do Flutter
         
         // Escutar mensagens do Flutter
         window.addEventListener('message', function(event) {
@@ -230,6 +353,16 @@
                     case 'centerOnUser':
                         centerOnUser();
                         break;
+                    case 'hideRides':
+                        ridesVisible = false;
+                        rideMarkers.forEach((marker) => { if (map.hasLayer(marker)) map.removeLayer(marker); });
+                        rideCircles.forEach((circle) => { if (map.hasLayer(circle)) map.removeLayer(circle); });
+                        break;
+                    case 'showRides':
+                        ridesVisible = true;
+                        rideMarkers.forEach((marker) => { if (!map.hasLayer(marker)) marker.addTo(map); });
+                        rideCircles.forEach((circle) => { if (!map.hasLayer(circle)) circle.addTo(map); });
+                        break;
                     case 'refreshRides':
                         // Recarregar caronas (você pode implementar uma chamada para API aqui)
                         updateRides(rides);
@@ -239,7 +372,11 @@
                 // Mensagens estruturadas
                 switch(data.type) {
                     case 'updateRides':
-                        updateRides(data.rides);
+                        if (data.replace === true) {
+                            replaceRides(data.rides);
+                        } else {
+                            updateRides(data.rides);
+                        }
                         break;
                     case 'addRide':
                         addRideMarker(data.ride);
@@ -255,9 +392,15 @@
         });
         
         // Centralizar automaticamente no usuário ao carregar
+        // Aguardar um pouco para que o Flutter tenha tempo de enviar as caronas
         setTimeout(() => {
-            centerOnUser();
-        }, 1000);
+            // Só tentar centralizar se não houver erro ou se o mapa ainda estiver na posição padrão
+            // Isso evita interferir se o Flutter já carregou caronas e centralizou o mapa
+            if (rideMarkers.size === 0) {
+                // Se não há caronas ainda, tentar centralizar no usuário
+                centerOnUser();
+            }
+        }, 1500);
     </script>
 </body>
 </html>

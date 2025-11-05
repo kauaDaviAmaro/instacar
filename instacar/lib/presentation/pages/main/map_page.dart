@@ -1,8 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:instacar/presentation/widgets/BottomNavigationBar.dart';
-import 'package:instacar/core/services/map_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
+import 'package:instacar/core/services/map_service.dart';
+import 'dart:ui_web' as ui_web;
+import 'package:go_router/go_router.dart';
+import 'package:instacar/core/services/ride_service.dart';
+import 'package:instacar/core/models/RideModel.dart';
+import 'package:instacar/presentation/widgets/navbar.dart';
+import 'package:instacar/presentation/widgets/BottomNavigationBar.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -12,337 +18,340 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
-  bool _isLoading = true;
-  List<Map<String, dynamic>> _rides = [];
+  late final String _viewType;
+  html.IFrameElement? _iframe;
+  bool _mapReady = false; // reserved for future use (e.g., disabling actions until ready)
+  bool _loading = true;
+  bool _showRides = true;
+  
+  void _postMessage(dynamic message) {
+    final win = _iframe?.contentWindow;
+    if (win != null) {
+      win.postMessage(message, '*');
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _loadRides();
+    if (kIsWeb) {
+      _setupIframe();
+      // Ouvir mensagens do iframe (web/map.html)
+      html.window.onMessage.listen((event) async {
+        final data = event.data;
+        if (data is Map && data['type'] == 'openRide') {
+          final rideId = data['rideId']?.toString();
+          if (rideId != null && mounted) {
+            // Abrir modal bottom sheet com detalhes
+            if (!mounted) return;
+            // ignore: use_build_context_synchronously
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.white,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              builder: (_) => _RideBottomSheet(rideId: rideId),
+            );
+          }
+        } else if (data is Map && data['type'] == 'requestRides') {
+          // Reenvia a lista atual de caronas para o mapa
+          try {
+            final rides = await MapService.getAvailableRides();
+            _postMessage({'type': 'updateRides', 'rides': rides});
+          } catch (_) {}
+        }
+      });
+    } else {
+      _loading = false;
+    }
   }
 
-  Future<void> _loadRides() async {
+  void _setupIframe() {
+    _viewType = 'instacar-map-${DateTime.now().millisecondsSinceEpoch}';
+
+    _iframe = html.IFrameElement()
+      ..src = 'map.html'
+      ..style.border = '0'
+      ..style.width = '100%'
+      ..style.height = '100%';
+
+    ui_web.platformViewRegistry.registerViewFactory(_viewType, (int viewId) {
+      return _iframe!;
+    });
+
+    _iframe!.onLoad.listen((_) async {
+      setState(() {
+        _mapReady = true;
+      });
+      await _loadRidesAndCenterOnUser();
+    });
+  }
+
+  Future<void> _loadRidesAndCenterOnUser() async {
     try {
+      setState(() {
+        _loading = true;
+      });
       final rides = await MapService.getAvailableRides();
-      setState(() {
-        _rides = rides;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      // Always send data updates; visibility handled separately
+      _postMessage({'type': 'updateRides', 'rides': rides});
+      // Apply visibility state without clearing data
+      _postMessage(_showRides ? 'showRides' : 'hideRides');
+      // Desenhar/centralizar no usuário sem afetar caronas
+      MapService.centerOnUser();
+    } finally {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao carregar caronas: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        setState(() {
+          _loading = false;
+        });
       }
     }
   }
 
-  Future<void> _refreshRides() async {
+  Future<void> _centerOnUser() async {
+    MapService.centerOnUser();
+  }
+
+  Future<void> _toggleShowRides() async {
     setState(() {
-      _isLoading = true;
+      _showRides = !_showRides;
     });
-    await _loadRides();
+    // Toggle visibility without reloading data
+    _postMessage(_showRides ? 'showRides' : 'hideRides');
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mapa de Caronas'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => GoRouter.of(context).pop(),
+    if (!kIsWeb) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Mapa')),
+        body: const Center(
+          child: Text('Mapa disponível apenas no Web.'),
         ),
-        actions: [
-          IconButton(
-            icon: _isLoading 
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.refresh),
-            onPressed: _isLoading ? null : _refreshRides,
-            tooltip: 'Atualizar Caronas',
+      );
+    }
+
+    return Scaffold(
+      body: Column(
+        children: [
+          TopNavbar(
+            onSearchChanged: (_) {},
+            showFilter: false,
+            showSearch: false,
+            showRequestsButton: true,
           ),
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Informações do Mapa'),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          Expanded(
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: _iframe == null
+                      ? const SizedBox.shrink()
+                      : HtmlElementView(viewType: _viewType),
+                ),
+                // Ações do mapa no canto superior direito
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Row(
                     children: [
-                      Text('Caronas encontradas: ${_rides.length}'),
-                      const SizedBox(height: 8),
-                      const Text('• Clique nos marcadores para ver detalhes'),
-                      const Text('• Use os controles para navegar'),
-                      const Text('• Marcação 📍 mostra sua localização'),
+                      _MapActionButton(
+                        tooltip: _showRides ? 'Ocultar caronas' : 'Mostrar caronas',
+                        icon: _showRides ? Icons.visibility_off : Icons.directions_car,
+                        onPressed: _toggleShowRides,
+                      ),
+                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
+                      _MapActionButton(
+                        tooltip: 'Minha localização',
+                        icon: Icons.my_location,
+                        onPressed: _centerOnUser,
+                      ),
+                      const SizedBox(width: 8),
+                      _MapActionButton(
+                        tooltip: 'Atualizar',
+                        icon: Icons.refresh,
+                        onPressed: _loadRidesAndCenterOnUser,
+                      ),
                     ],
                   ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Fechar'),
-                    ),
-                  ],
                 ),
-              );
-            },
-            tooltip: 'Informações',
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          // Mapa usando WebView
-          if (kIsWeb)
-            Container(
-              width: double.infinity,
-              height: double.infinity,
-              child: _buildWebMap(),
-            )
-          else
-            // Fallback para plataformas não-web
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0xFF87CEEB), // Sky blue
-                    Color(0xFF98FB98), // Pale green
-                  ],
-                ),
-              ),
-              child: const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.map,
-                      size: 120,
-                      color: Colors.blue,
-                    ),
-                    SizedBox(height: 20),
-                    Text(
-                      'Mapa Disponível Apenas na Web',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Acesse o aplicativo através do navegador para visualizar o mapa interativo.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          // Lista de caronas sobreposta
-          Positioned(
-            bottom: 100,
-            left: 16,
-            right: 16,
-            child: Container(
-              height: 200,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(12),
-                        topRight: Radius.circular(12),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.directions_car, color: Colors.white),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Caronas Disponíveis (${_rides.length})',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
+                if (_loading)
+                  const Positioned.fill(
+                    child: IgnorePointer(
+                      ignoring: true,
+                      child: Center(child: CircularProgressIndicator()),
                     ),
                   ),
-                  Expanded(
-                    child: _rides.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'Nenhuma carona disponível',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 16,
-                              ),
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(8),
-                            itemCount: _rides.length,
-                            itemBuilder: (context, index) {
-                              final ride = _rides[index];
-                              return Card(
-                                margin: const EdgeInsets.symmetric(vertical: 4),
-                                child: ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: Colors.blue,
-                                    child: Text(
-                                      ride['seats'].toString(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  title: Text(
-                                    '${ride['from']} → ${ride['to']}',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  subtitle: Text(
-                                    '${ride['driver']} • ${ride['time']}',
-                                  ),
-                                  trailing: Text(
-                                    ride['price'],
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.green,
-                                    ),
-                                  ),
-                                  onTap: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Detalhes da carona: ${ride['from']} → ${ride['to']}'),
-                                        backgroundColor: Colors.blue,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Botões flutuantes
-          Positioned(
-            top: 16,
-            right: 16,
-            child: Column(
-              children: [
-                FloatingActionButton(
-                  mini: true,
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Filtros serão implementados em breve!'),
-                        backgroundColor: Colors.blue,
-                      ),
-                    );
-                  },
-                  backgroundColor: Colors.white,
-                  child: const Icon(Icons.filter_list, color: Colors.blue),
-                ),
-                const SizedBox(height: 8),
-                FloatingActionButton(
-                  mini: true,
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Busca será implementada em breve!'),
-                        backgroundColor: Colors.blue,
-                      ),
-                    );
-                  },
-                  backgroundColor: Colors.white,
-                  child: const Icon(Icons.search, color: Colors.blue),
-                ),
               ],
             ),
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavBar(selectedIndex: 0),
+      bottomNavigationBar: const BottomNavBar(selectedIndex: 0),
+      floatingActionButton: null,
     );
   }
+}
 
-  Widget _buildWebMap() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF87CEEB), // Sky blue
-            Color(0xFF98FB98), // Pale green
-          ],
+
+class _RideBottomSheet extends StatefulWidget {
+  final String rideId;
+  const _RideBottomSheet({required this.rideId});
+
+  @override
+  State<_RideBottomSheet> createState() => _RideBottomSheetState();
+}
+
+class _RideBottomSheetState extends State<_RideBottomSheet> {
+  late Future<RideModel> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = RideService().fetchRideById(widget.rideId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return FutureBuilder<RideModel>(
+              future: _future,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return SingleChildScrollView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Erro ao carregar carona', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        Text(snapshot.error.toString()),
+                        const SizedBox(height: 16),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('Fechar'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                final ride = snapshot.data!;
+                final remainingSpots = (ride.totalSpots - ride.takenSpots).clamp(0, ride.totalSpots);
+                return Material(
+                  color: Colors.white,
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'Detalhes da carona',
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text('${ride.from} → ${ride.to}', style: const TextStyle(fontSize: 16)),
+                        const SizedBox(height: 6),
+                        Text('Motorista: ${ride.name}'),
+                        const SizedBox(height: 6),
+                        if (ride.date.isNotEmpty) Text('Horário/Data: ${ride.date}'),
+                        const SizedBox(height: 6),
+                        Text('Vagas: $remainingSpots de ${ride.totalSpots}'),
+                        const SizedBox(height: 6),
+                        Text('Veículo: ${ride.model} • ${ride.color} • ${ride.plate}'),
+                        if (ride.observation.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          const Text('Observações:', style: TextStyle(fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 4),
+                          Text(ride.observation),
+                        ],
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  context.push('/ride-details/${ride.id}');
+                                },
+                                icon: const Icon(Icons.open_in_new),
+                                label: const Text('Ver página completa'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size.fromHeight(48),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
         ),
       ),
-      child: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.map,
-              size: 120,
-              color: Colors.blue,
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Mapa Interativo',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-              ),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Visualize as caronas disponíveis na lista abaixo.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-              ),
-            ),
-          ],
+    );
+  }
+}
+
+
+class _MapActionButton extends StatelessWidget {
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _MapActionButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      elevation: 2,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onPressed,
+        child: Tooltip(
+          message: tooltip,
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Icon(icon, color: Colors.blue),
+          ),
         ),
       ),
     );
