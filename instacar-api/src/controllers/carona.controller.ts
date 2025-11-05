@@ -78,7 +78,7 @@ const caronaController = {
     }
   },
 
-  getCaronaById: async (req: IAuthRequest, res: Response): Promise<void> => {
+  getCaronaById: async (req: Request, res: Response): Promise<void> => {
     try {
       const caronaId = req.params.id;
 

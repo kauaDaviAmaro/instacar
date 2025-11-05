@@ -1,0 +1,5 @@
+ALTER TABLE Users ADD COLUMN plan TEXT;
+
+
+
+

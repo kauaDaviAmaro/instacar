@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #map { width: 100%; height: 100%; }
+    .leaflet-control-attribution { display: none; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    function getParam(name) {
+      const url = new URL(window.location.href);
+      const v = url.searchParams.get(name);
+      return v !== null ? parseFloat(v) : null;
+    }
+
+    const lat = getParam('lat');
+    const lng = getParam('lng');
+
+    if (isFinite(lat) && isFinite(lng)) {
+      const map = L.map('map', { zoomControl: false, attributionControl: false, dragging: true }).setView([lat, lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {}).addTo(map);
+      const marker = L.marker([lat, lng]).addTo(map);
+
+      function openExternal() {
+        window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+      }
+
+      marker.on('click', openExternal);
+      map.on('click', openExternal);
+    } else {
+      document.getElementById('map').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#888;font:14px sans-serif">Localização inválida</div>';
+    }
+  </script>
+</body>
+
+</html>
+
+

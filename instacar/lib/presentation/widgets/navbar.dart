@@ -9,6 +9,7 @@ class TopNavbar extends StatefulWidget {
   final bool showFilter; // New parameter
   final Function(Map<String, dynamic>)? onFilterApplied; // New parameter for filter callback
   final bool showRequestsButton; // New parameter for requests button
+  final bool showSearch; // Controla exibição da barra de busca
 
   const TopNavbar({
     super.key,
@@ -16,6 +17,7 @@ class TopNavbar extends StatefulWidget {
     this.showFilter = true, // Default is true
     this.onFilterApplied,
     this.showRequestsButton = false, // Default is false
+    this.showSearch = true, // Default é mostrar a busca
   });
 
   @override
@@ -97,55 +99,57 @@ class _TopNavbarState extends State<TopNavbar> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      onChanged: widget.onSearchChanged,
-                      decoration: InputDecoration(
-                        hintText: 'Buscar...',
-                        hintStyle: const TextStyle(color: Colors.grey),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 10,
-                          horizontal: 12,
+              if (widget.showSearch) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _controller,
+                        onChanged: widget.onSearchChanged,
+                        decoration: InputDecoration(
+                          hintText: 'Buscar...',
+                          hintStyle: const TextStyle(color: Colors.grey),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
                         ),
-                        border: OutlineInputBorder(
+                      ),
+                    ),
+                    if (widget.showFilter) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
+                        ),
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.filter_list,
+                            color: Colors.blue,
+                            size: 24,
+                          ),
+                          onPressed: () {
+                            showBarModalBottomSheet(
+                              context: context,
+                              builder: (context) => HomeModalAdd(
+                                onFilterApplied: widget.onFilterApplied,
+                              ),
+                            );
+                          },
                         ),
                       ),
-                    ),
-                  ),
-                  if (widget.showFilter) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.filter_list,
-                          color: Colors.blue,
-                          size: 24,
-                        ),
-                        onPressed: () {
-                          showBarModalBottomSheet(
-                            context: context,
-                            builder: (context) => HomeModalAdd(
-                              onFilterApplied: widget.onFilterApplied,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                    ],
                   ],
-                ],
-              ),
+                ),
+              ],
             ],
           ),
         ),

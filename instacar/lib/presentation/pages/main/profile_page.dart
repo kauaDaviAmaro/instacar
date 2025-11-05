@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:instacar/core/services/auth_service.dart' as core_auth;
 import 'package:instacar/core/services/user_service.dart';
 import 'package:instacar/presentation/widgets/BottomNavigationBar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:instacar/presentation/widgets/floating_map_button.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -133,37 +134,61 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
             final avatarSize = isMinimized ? 40.0 : 120.0;
             final fontSize = isMinimized ? 16.0 : 48.0;
             
-            return Container(
-              width: avatarSize,
-              height: avatarSize,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    avatarColor,
-                    avatarColor.withOpacity(0.8),
+            return FutureBuilder<SharedPreferences>(
+              future: SharedPreferences.getInstance(),
+              builder: (context, prefsSnap) {
+                final isPremium = prefsSnap.hasData && (prefsSnap.data!.getString('user_plan') == 'premium');
+
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: avatarSize,
+                      height: avatarSize,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            avatarColor,
+                            avatarColor.withOpacity(0.8),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(avatarSize / 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          initials,
+                          style: TextStyle(
+                            fontSize: fontSize,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (isPremium)
+                      Positioned(
+                        right: -4,
+                        top: -6,
+                        child: Text(
+                          '👑',
+                          style: TextStyle(
+                            fontSize: isMinimized ? 16 : 22,
+                            height: 1.0,
+                          ),
+                        ),
+                      ),
                   ],
-                ),
-                borderRadius: BorderRadius.circular(avatarSize / 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  initials,
-                  style: TextStyle(
-                    fontSize: fontSize,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+                );
+              },
             );
           },
         );
