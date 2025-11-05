@@ -1,8 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:instacar/core/services/user_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:instacar/core/services/user_service.dart';
 
-class PlansPage extends StatelessWidget {
+class PlansPage extends StatefulWidget {
   const PlansPage({super.key});
+
+  @override
+  State<PlansPage> createState() => _PlansPageState();
+}
+
+class _PlansPageState extends State<PlansPage> {
+  String? _currentPlan; // 'basic' | 'premium' | null
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentPlan();
+  }
+
+  Future<void> _loadCurrentPlan() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _currentPlan = prefs.getString('user_plan');
+    });
+  }
+
+  Future<void> _setPlan(String plan) async {
+    if (_saving) return;
+    setState(() {
+      _saving = true;
+    });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_plan', plan);
+      try { await UserService.updatePlan(plan); } catch (_) {}
+      setState(() {
+        _currentPlan = plan;
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Plano alterado para ${plan == 'premium' ? 'Premium' : 'Básico'}'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +66,6 @@ class PlansPage extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-            // Tenta voltar no histórico, se não conseguir vai para login
             if (context.canPop()) {
               context.pop();
             } else {
@@ -47,8 +98,38 @@ class PlansPage extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 8),
+            if (_currentPlan != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: (_currentPlan == 'premium' ? const Color(0xFF4A90E2) : Colors.grey).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: _currentPlan == 'premium' ? const Color(0xFF4A90E2) : Colors.grey,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.check_circle,
+                      color: _currentPlan == 'premium' ? const Color(0xFF4A90E2) : Colors.grey,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Plano atual: ${_currentPlan == 'premium' ? 'Premium' : 'Básico'}',
+                      style: TextStyle(
+                        color: _currentPlan == 'premium' ? const Color(0xFF4A90E2) : Colors.grey,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 40),
-            
+
             // Plano Básico
             _buildPlan(
               context: context,
@@ -62,10 +143,11 @@ class PlansPage extends StatelessWidget {
                 'Ferramentas premium bloqueadas',
               ],
               isPopular: false,
+              planKey: 'basic',
             ),
-            
+
             const SizedBox(height: 30),
-            
+
             // Plano Premium
             _buildPlan(
               context: context,
@@ -80,6 +162,7 @@ class PlansPage extends StatelessWidget {
                 'Maior número salvos em favoritos',
               ],
               isPopular: true,
+              planKey: 'premium',
             ),
           ],
         ),
@@ -94,6 +177,7 @@ class PlansPage extends StatelessWidget {
     required String description,
     required List<String> features,
     required bool isPopular,
+    required String planKey,
   }) {
     return Container(
       width: double.infinity,
@@ -136,7 +220,7 @@ class PlansPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: isPopular ? 40 : 20),
-                
+
                 // Preço
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,9 +253,9 @@ class PlansPage extends StatelessWidget {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Título
                 Text(
                   title,
@@ -181,9 +265,9 @@ class PlansPage extends StatelessWidget {
                     color: Colors.black87,
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Descrição
                 Text(
                   description,
@@ -193,9 +277,9 @@ class PlansPage extends StatelessWidget {
                     height: 1.4,
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Lista de features
                 ...features.map((feature) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -226,32 +310,43 @@ class PlansPage extends StatelessWidget {
                     ],
                   ),
                 )),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Botão
-                // SizedBox(
-                //   width: double.infinity,
-                //   height: 50,
-                //   child: ElevatedButton(
-                //     onPressed: onTap,
-                //     style: ElevatedButton.styleFrom(
-                //       backgroundColor: const Color(0xFF4A90E2),
-                //       foregroundColor: Colors.white,
-                //       shape: RoundedRectangleBorder(
-                //         borderRadius: BorderRadius.circular(12),
-                //       ),
-                //       elevation: 0,
-                //     ),
-                //     child: const Text(
-                //       'Escolha Plano',
-                //       style: TextStyle(
-                //         fontSize: 16,
-                //         fontWeight: FontWeight.bold,
-                //       ),
-                //     ),
-                //   ),
-                // ),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: (_currentPlan == planKey || _saving)
+                        ? null
+                        : () => _setPlan(planKey),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4A90E2),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: _saving && _currentPlan != planKey
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.4,
+                            ),
+                          )
+                        : Text(
+                            _currentPlan == planKey ? 'Plano atual' : 'Escolher plano',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -259,5 +354,4 @@ class PlansPage extends StatelessWidget {
       ),
     );
   }
-
 }
