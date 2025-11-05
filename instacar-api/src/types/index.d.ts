@@ -19,6 +19,7 @@ export interface IUser {
   modeloVeiculo?: string;
   corVeiculo?: string;
   placa?: string;
+  plan?: string;
 
   verificationCode?: string;
   codeExpires?: number | null;

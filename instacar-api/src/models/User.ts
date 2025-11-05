@@ -23,6 +23,7 @@ class User extends Model<IUser> implements IUser {
   modeloVeiculo?: string;
   corVeiculo?: string;
   placa?: string;
+  plan?: string;
 }
 
 User.init(
@@ -51,6 +52,7 @@ User.init(
     modeloVeiculo: { type: DataTypes.STRING },
     corVeiculo: { type: DataTypes.STRING },
     placa: { type: DataTypes.STRING },
+    plan: { type: DataTypes.STRING },
   },
   {
     sequelize,
