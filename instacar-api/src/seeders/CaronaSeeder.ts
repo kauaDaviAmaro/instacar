@@ -22,86 +22,86 @@ export const seedCaronas = async () => {
     const caronas = [
       {
         motoristaId: users[0].id!,
-        origem: 'Shopping Iguatemi, São Paulo',
-        destino: 'Aeroporto de Guarulhos',
-        dataHora: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+        origem: 'Centro, Marília',
+        destino: 'Rodoviária, Marília',
+        dataHora: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Amanhã
         vagas: 3,
         status: 'disponível' as const,
-        origem_lat: -23.5505,
-        origem_lon: -46.6333,
-        destino_lat: -23.4356,
-        destino_lon: -46.4731,
+        origem_lat: -22.2171,
+        origem_lon: -49.9501,
+        destino_lat: -22.2039,
+        destino_lon: -49.9415,
         observacao: 'Saída pontual às 8h',
         vagasDisponiveis: 3
       },
       {
         motoristaId: users[1].id!,
-        origem: 'Metrô Trianon-MASP, São Paulo',
-        destino: 'Universidade de São Paulo - Butantã',
-        dataHora: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // Day after tomorrow
+        origem: 'Cascata, Marília',
+        destino: 'UNIMAR, Marília',
+        dataHora: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // Depois de amanhã
         vagas: 2,
         status: 'disponível' as const,
-        origem_lat: -23.5613,
-        origem_lon: -46.6565,
-        destino_lat: -23.5613,
-        destino_lon: -46.7305,
+        origem_lat: -22.2260,
+        origem_lon: -49.9850,
+        destino_lat: -22.2109,
+        destino_lon: -49.9548,
         observacao: 'Carro confortável, ar condicionado',
         vagasDisponiveis: 2
       },
       {
         motoristaId: users[2].id!,
-        origem: 'Terminal Rodoviário Tietê',
-        destino: 'Shopping Center Norte',
-        dataHora: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now
+        origem: 'Palmital, Marília',
+        destino: 'Centro, Marília',
+        dataHora: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // +3 dias
         vagas: 1,
         status: 'disponível' as const,
-        origem_lat: -23.5289,
-        origem_lon: -46.6250,
-        destino_lat: -23.5000,
-        destino_lon: -46.6000,
+        origem_lat: -22.2100,
+        origem_lon: -49.9600,
+        destino_lat: -22.2171,
+        destino_lon: -49.9501,
         observacao: 'Moto, apenas 1 passageiro',
         vagasDisponiveis: 1
       },
       {
         motoristaId: users[3].id!,
-        origem: 'Praça da República, São Paulo',
-        destino: 'Parque Ibirapuera',
-        dataHora: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days from now
+        origem: 'Nova Marília, Marília',
+        destino: 'Marília Shopping',
+        dataHora: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(), // +4 dias
         vagas: 4,
         status: 'disponível' as const,
-        origem_lat: -23.5451,
-        origem_lon: -46.6333,
-        destino_lat: -23.5873,
-        destino_lon: -46.6575,
-        observacao: 'Passeio no parque, retorno às 18h',
+        origem_lat: -22.2250,
+        origem_lon: -49.9400,
+        destino_lat: -22.2106,
+        destino_lon: -49.9514,
+        observacao: 'Passeio no shopping, retorno às 18h',
         vagasDisponiveis: 4
       },
       {
         motoristaId: users[4].id!,
-        origem: 'Estação de Metrô Fradique Coutinho',
-        destino: 'Hospital das Clínicas',
-        dataHora: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
+        origem: 'Lácio, Marília',
+        destino: 'Centro, Marília',
+        dataHora: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // +5 dias
         vagas: 2,
         status: 'disponível' as const,
-        origem_lat: -23.5613,
-        origem_lon: -46.6565,
-        destino_lat: -23.5613,
-        destino_lon: -46.6565,
-        observacao: 'Consulta médica, urgência',
+        origem_lat: -22.2300,
+        origem_lon: -49.9520,
+        destino_lat: -22.2171,
+        destino_lon: -49.9501,
+        observacao: 'Saída após o expediente',
         vagasDisponiveis: 2
       },
       {
         motoristaId: users[0].id!,
-        origem: 'Aeroporto de Congonhas',
-        destino: 'Centro de São Paulo',
-        dataHora: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(), // 6 days from now
+        origem: 'Marília Shopping',
+        destino: 'Centro, Marília',
+        dataHora: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(), // +6 dias
         vagas: 3,
         status: 'disponível' as const,
-        origem_lat: -23.6267,
-        origem_lon: -46.6553,
-        destino_lat: -23.5505,
-        destino_lon: -46.6333,
-        observacao: 'Chegada de voo, aguardar no desembarque',
+        origem_lat: -22.2106,
+        origem_lon: -49.9514,
+        destino_lat: -22.2171,
+        destino_lon: -49.9501,
+        observacao: 'Retorno do shopping',
         vagasDisponiveis: 3
       }
     ];
