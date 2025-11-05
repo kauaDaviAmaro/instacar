@@ -18,6 +18,25 @@ class UserService {
     return prefs.getString('auth_token');
   }
 
+  // Update current user's plan
+  static Future<void> updatePlan(String plan) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.put(
+        Uri.parse('$_baseUrl/users/'),
+        headers: headers,
+        body: jsonEncode({ 'plan': plan }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update plan: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print('Error updating user plan: $e');
+      rethrow;
+    }
+  }
+
   // Get user by ID
   static Future<Map<String, dynamic>> getUserById(String userId) async {
     try {
