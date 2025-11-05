@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
+import 'dart:ui_web' as ui_web;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:instacar/core/services/chat_service.dart';
+import 'package:instacar/core/services/map_service.dart';
 
 class ChatPage extends StatefulWidget {
   final String userId;
@@ -29,6 +34,7 @@ class _ChatPageState extends State<ChatPage> {
   bool isLoading = true;
   bool isSendingMessage = false;
   String? errorMessage;
+  int _mapViewCounter = 0;
 
   @override
   void initState() {
@@ -122,6 +128,111 @@ class _ChatPageState extends State<ChatPage> {
     socket!.on('disconnect', (_) {
       print('Disconnected from server');
     });
+  }
+
+  Future<void> _sendCurrentLocation() async {
+    if (isSendingMessage) return;
+    try {
+      setState(() {
+        isSendingMessage = true;
+        errorMessage = null;
+      });
+
+      final loc = await MapService.getCurrentLocation();
+      if (loc == null) {
+        setState(() {
+          errorMessage = 'Não foi possível obter sua localização';
+        });
+        return;
+      }
+
+      final lat = loc['lat'];
+      final lng = loc['lng'];
+      final geoText = 'geo:$lat,$lng';
+
+      socket?.emit('sendMessage', {
+        'senderId': widget.userId,
+        'receiverId': widget.receiverId,
+        'message': geoText,
+      });
+
+      setState(() {
+        messages.add(
+          Message(
+            senderId: widget.userId,
+            receiverId: widget.receiverId,
+            message: geoText,
+            timestamp: DateTime.now(),
+            isMe: true,
+          ),
+        );
+      });
+      _scrollToBottom();
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Erro ao enviar localização: ${e.toString()}';
+      });
+    } finally {
+      setState(() {
+        isSendingMessage = false;
+      });
+    }
+  }
+
+  bool _isGeoMessage(String text) {
+    return text.startsWith('geo:') && text.contains(',');
+  }
+
+  List<double>? _parseGeo(String text) {
+    try {
+      final coords = text.substring(4).split(',');
+      if (coords.length != 2) return null;
+      final lat = double.parse(coords[0]);
+      final lng = double.parse(coords[1]);
+      return [lat, lng];
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Widget _buildGeoBubble(String text, {required bool isMe}) {
+    final coords = _parseGeo(text);
+    if (coords == null) {
+      return Text(text, style: const TextStyle(fontSize: 16));
+    }
+
+    final lat = coords[0];
+    final lng = coords[1];
+
+    if (!kIsWeb) {
+      final url = 'https://www.google.com/maps?q=$lat,$lng';
+      return InkWell(
+        onTap: () {},
+        child: Text(url, style: const TextStyle(decoration: TextDecoration.underline)),
+      );
+    }
+
+    final viewType = 'geo-map-${_mapViewCounter++}-${DateTime.now().millisecondsSinceEpoch}';
+
+    final iframe = html.IFrameElement()
+      ..src = 'embed_map.html?lat=$lat&lng=$lng'
+      ..style.border = '0'
+      ..style.width = '100%'
+      ..style.height = '180px';
+
+    // Register the view factory once per unique viewType
+    ui_web.platformViewRegistry.registerViewFactory(viewType, (int viewId) {
+      return iframe;
+    });
+
+    return SizedBox(
+      width: 260,
+      height: 180,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: HtmlElementView(viewType: viewType),
+      ),
+    );
   }
 
   Future<void> _loadMessages() async {
@@ -294,10 +405,12 @@ class _ChatPageState extends State<ChatPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    msg.message,
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
+                                  _isGeoMessage(msg.message)
+                                      ? _buildGeoBubble(msg.message, isMe: isMe)
+                                      : Text(
+                                          msg.message,
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
                                   const SizedBox(height: 4),
                                   Text(
                                     _formatTime(msg.timestamp),
@@ -347,6 +460,13 @@ class _ChatPageState extends State<ChatPage> {
                                     setState(() {});
                                   },
                                 ),
+                              ),
+                              const SizedBox(width: 6),
+                              IconButton(
+                                tooltip: 'Enviar minha localização',
+                                icon: const Icon(Icons.my_location),
+                                color: Colors.blueGrey,
+                                onPressed: isSendingMessage ? null : _sendCurrentLocation,
                               ),
                               IconButton(
                                 icon: isSendingMessage
