@@ -32,21 +32,28 @@ class RideModel {
   });
 
   factory RideModel.fromJson(Map<String, dynamic> json) {
+    // Converter id para string, mesmo que venha como int
+    final id = json['id']?.toString() ?? '';
+    
     return RideModel(
-      id: json['id'], // ou 'id' se for o nome correto
-      name: json['name'],
-      genderAge: json['genderAge'],
-      date: json['date'],
-      from: json['from'],
-      to: json['to'],
-      type: json['type'],
-      model: json['model'],
-      color: json['color'],
-      plate: json['plate'],
-      totalSpots: json['totalSpots'],
-      takenSpots: json['takenSpots'],
-      observation: json['observation'],
-      motoristaId: json['motoristaId'] ?? json['id'], // fallback para id se motoristaId não existir
+      id: id,
+      name: json['name']?.toString() ?? 'Motorista',
+      genderAge: json['genderAge']?.toString() ?? 'Não informado',
+      date: json['date']?.toString() ?? '',
+      from: json['from']?.toString() ?? json['origem']?.toString() ?? '',
+      to: json['to']?.toString() ?? json['destino']?.toString() ?? '',
+      type: json['type']?.toString() ?? 'Não informado',
+      model: json['model']?.toString() ?? 'Não informado',
+      color: json['color']?.toString() ?? 'Não informado',
+      plate: json['plate']?.toString() ?? 'Não informado',
+      totalSpots: (json['totalSpots'] ?? json['vagas'] ?? 0) is int 
+          ? (json['totalSpots'] ?? json['vagas'] ?? 0) as int
+          : int.tryParse((json['totalSpots'] ?? json['vagas'] ?? '0').toString()) ?? 0,
+      takenSpots: (json['takenSpots'] ?? 0) is int
+          ? (json['takenSpots'] ?? 0) as int
+          : int.tryParse((json['takenSpots'] ?? '0').toString()) ?? 0,
+      observation: json['observation']?.toString() ?? json['observacao']?.toString() ?? '',
+      motoristaId: json['motoristaId']?.toString() ?? id, // fallback para id se motoristaId não existir
     );
   }
 }
