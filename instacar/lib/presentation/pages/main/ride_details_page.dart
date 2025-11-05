@@ -208,36 +208,51 @@ class _RideDetailsPageState extends State<RideDetailsPage> {
                 }
 
                 if (snapshot.hasError) {
+                  final errorMsg = snapshot.error.toString();
                   return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: Colors.red,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Erro ao carregar detalhes da carona',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${snapshot.error}',
-                          style: const TextStyle(color: Colors.grey),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _futureRide = RideService().fetchRideById(widget.rideId);
-                            });
-                          },
-                          child: const Text('Tentar Novamente'),
-                        ),
-                      ],
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: Colors.red,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Erro ao carregar detalhes da carona',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            errorMsg,
+                            style: const TextStyle(color: Colors.grey),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _futureRide = RideService().fetchRideById(widget.rideId);
+                                _checkSolicitacaoStatus();
+                              });
+                            },
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Tentar Novamente'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Voltar'),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 }
@@ -316,10 +331,10 @@ class _RideDetailsPageState extends State<RideDetailsPage> {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              _buildDetailRow('Tipo', ride.type),
-                              _buildDetailRow('Modelo', ride.model),
-                              _buildDetailRow('Cor', ride.color),
-                              _buildDetailRow('Placa', ride.plate),
+                              _buildDetailRow('Tipo', ride.type.isNotEmpty ? ride.type : 'Não informado'),
+                              _buildDetailRow('Modelo', ride.model.isNotEmpty ? ride.model : 'Não informado'),
+                              _buildDetailRow('Cor', ride.color.isNotEmpty ? ride.color : 'Não informado'),
+                              _buildDetailRow('Placa', ride.plate.isNotEmpty ? ride.plate : 'Não informado'),
                               const SizedBox(height: 16),
                               _buildDetailRow('Vagas Disponíveis', '${ride.takenSpots}/${ride.totalSpots}'),
                             ],
